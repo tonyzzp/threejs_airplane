@@ -1,0 +1,19 @@
+{
+  "name": "threejs_demo",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "start": "npx webpack"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "stats.js": "^0.17.0",
+    "three": "^0.103.0",
+    "three-fbx-loader": "^1.0.3",
+    "three-gltf-loader": "^1.103.0",
+    "webpack": "^4.30.0",
+    "webpack-cli": "^3.3.0"
+  }
+}
