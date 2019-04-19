@@ -9,7 +9,6 @@ const Colors = {
 
 class Sea {
     constructor() {
-
         let mat = new THREE.MeshPhongMaterial({
             color: Colors.blue,
             opacity: 0.6,
