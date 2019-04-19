@@ -16,23 +16,35 @@ class Sea {
             flatShading: true,
         })
         let geo = new THREE.CylinderGeometry(600, 600, 800, 40, 10)
+        geo.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
 
         this.mesh = new THREE.Mesh(geo, mat)
         this.mesh.receiveShadow = true
         this.mesh.position.y = -600
-        this.mesh.rotation.x = Math.PI / 2
     }
 }
 
 class Cloud {
     constructor() {
-        let mat = new THREE.MeshPhongMaterial({
-            color: Colors.white,
-        })
-        let geo = new THREE.BoxGeometry(20, 20, 20)
-        this.mesh = new THREE.Mesh(geo, mat)
-        this.mesh.castShadow = true
-        this.mesh.receiveShadow = true
+        this.mesh = new THREE.Object3D()
+        let n = 3 + Math.random() * 2
+        for (let i = 0; i < n; i++) {
+            let mat = new THREE.MeshPhongMaterial({
+                color: Colors.white,
+            })
+            let geo = new THREE.BoxGeometry(20, 20, 20)
+            let mesh = new THREE.Mesh(geo, mat)
+            mesh.castShadow = true
+            mesh.receiveShadow = true
+            mesh.position.x = i * 15
+            mesh.position.y = Math.random() * 10
+            mesh.position.z = Math.random() * 10
+            mesh.rotation.z = Math.random() * Math.PI / 2
+            mesh.rotation.x = Math.random() * Math.PI / 2
+            let scale = Math.random() * 0.9 + 0.1
+            mesh.scale.set(scale, scale, scale)
+            this.mesh.add(mesh)
+        }
     }
 }
 
@@ -46,9 +58,7 @@ let renderer = new THREE.WebGLRenderer({
 renderer.shadowMap.enabled = true
 renderer.setSize(window.innerWidth, window.innerHeight)
 
-
 camera.position.set(0, 100, 200)
-
 scene.fog = new THREE.Fog(0xf7d9aa, 100, 950)
 
 
@@ -86,20 +96,40 @@ function createLights() {
     scene.add(shadowLight);
 }
 
+function createSky() {
+    let sky = new THREE.Object3D()
+    let angle = Math.PI * 2 / 20
+    for (let i = 0; i < 20; i++) {
+        let a = angle * i
+        let cloud = new Cloud()
+        let h = 750 + Math.random() * 200
+        let x = Math.cos(a) * h
+        let y = Math.sin(a) * h
+        let z = -400 - Math.random() * 400;
+        let scale = 1 + Math.random() * 2;
+        cloud.mesh.scale.set(scale, scale, scale)
+        cloud.mesh.position.set(x, y, z)
+        cloud.mesh.rotation.z = a + Math.PI / 2
+        sky.add(cloud.mesh)
+    }
+    sky.position.y = -600
+    scene.add(sky)
+
+    return sky
+}
+
+function createSea() {
+    let sea = new Sea()
+    scene.add(sea.mesh)
+
+    return sea.mesh
+}
+
 createLights()
-let sea = new Sea()
-console.log("sea", sea.mesh)
-scene.add(sea.mesh)
-
-let cloud = new Cloud()
-console.log("cloud", cloud)
-cloud.mesh.position.y = 150
-cloud.mesh.position.z = -400
-scene.add(cloud.mesh)
+let sky = createSky()
+let sea = createSea()
 
 
-console.log("scene", scene)
-console.log("camera", camera)
 document.body.append(renderer.domElement)
 
 let s = new Stats()
@@ -107,6 +137,8 @@ s.showPanel(0)
 document.body.append(s.dom)
 function draw() {
     s.begin()
+    sky.rotation.z += 0.01
+    sea.rotation.z += 0.01
     renderer.render(scene, camera)
     s.end()
     requestAnimationFrame(draw)
