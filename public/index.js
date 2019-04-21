@@ -15,12 +15,40 @@ class Sea {
             transparent: true,
             flatShading: true,
         })
-        let geo = new THREE.CylinderGeometry(600, 600, 800, 40, 10)
-        geo.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
+        this.geo = new THREE.CylinderGeometry(600, 600, 800, 40, 10)
+        this.geo.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
 
-        this.mesh = new THREE.Mesh(geo, mat)
+        this.mesh = new THREE.Mesh(this.geo, mat)
         this.mesh.receiveShadow = true
         this.mesh.position.y = -600
+
+        this.points = []
+        this.geo.mergeVertices()
+        let len = this.geo.vertices.length
+        for (let i = 0; i < len; i++) {
+            let v = this.geo.vertices[i]
+            this.points.push({
+                x: v.x,
+                y: v.y,
+                z: v.z,
+                angle: Math.random() * Math.PI * 2,
+                speed: Math.random() * 0.03 + 0.02,
+                height: Math.random() * 15 + 5,
+            })
+        }
+    }
+
+    update() {
+        this.mesh.rotation.z += 0.01
+        let len = this.points.length
+        for (let i = 0; i < len; i++) {
+            let p = this.points[i]
+            let v = this.geo.vertices[i]
+            v.x = p.x + Math.sin(p.angle) * p.height
+            v.y = p.y + Math.cos(p.angle) * p.height
+            p.angle += p.speed
+        }
+        this.geo.verticesNeedUpdate = true
     }
 }
 
@@ -48,6 +76,102 @@ class Cloud {
     }
 }
 
+class Sky {
+
+    constructor() {
+        this.mesh = new THREE.Object3D()
+        let angle = Math.PI * 2 / 20
+        for (let i = 0; i < 20; i++) {
+            let a = angle * i
+            let cloud = new Cloud()
+            let h = 750 + Math.random() * 200
+            let x = Math.cos(a) * h
+            let y = Math.sin(a) * h
+            let z = -400 - Math.random() * 400;
+            let scale = 1 + Math.random() * 2;
+            cloud.mesh.scale.set(scale, scale, scale)
+            cloud.mesh.position.set(x, y, z)
+            cloud.mesh.rotation.z = a + Math.PI / 2
+            this.mesh.add(cloud.mesh)
+        }
+    }
+
+    update() {
+        this.mesh.rotation.z += 0.01
+    }
+}
+
+class Plane {
+    constructor() {
+        this.mesh = new THREE.Object3D()
+
+        //身
+        let box1 = new THREE.Mesh(
+            new THREE.BoxGeometry(25, 20, 20),
+            new THREE.MeshPhongMaterial({ color: Colors.red })
+        )
+        box1.castShadow = true
+        box1.receiveShadow = true
+        this.mesh.add(box1)
+
+        //头
+        let box2 = new THREE.Mesh(
+            new THREE.BoxGeometry(8, 20, 20),
+            new THREE.MeshPhongMaterial({ color: Colors.blue })
+        )
+        box2.position.x = 11 + 4
+        box2.castShadow = true
+        box2.receiveShadow = true
+        this.mesh.add(box2)
+
+        //桨
+        let box3 = new THREE.Mesh(
+            new THREE.CylinderGeometry(2, 2, 3)
+                .applyMatrix(new THREE.Matrix4().makeRotationZ(Math.PI / 2)),
+            new THREE.MeshPhongMaterial({ color: Colors.brown })
+        )
+        box3.position.x = 11 + 8 + 1.5
+        box3.castShadow = true
+        box3.receiveShadow = true
+        this.mesh.add(box3)
+
+        let box4 = new THREE.Mesh(
+            new THREE.BoxGeometry(1, 30, 7),
+            new THREE.MeshPhongMaterial({ color: Colors.brown })
+        )
+        box4.position.x = 11 + 8 + 3
+        box4.castShadow = true
+        box1.receiveShadow = true
+        this.mesh.add(box4)
+
+        //翅膀
+        let box5 = new THREE.Mesh(
+            new THREE.BoxGeometry(15, 1, 60),
+            new THREE.MeshPhongMaterial({ color: Colors.red })
+        )
+        box5.castShadow = true
+        box5.receiveShadow = true
+        this.mesh.add(box5)
+
+        //尾巴
+        let box7 = new THREE.Mesh(
+            new THREE.BoxGeometry(5, 10, 2),
+            new THREE.MeshPhongMaterial({ color: Colors.red })
+        )
+        box7.position.x = -13
+        box7.position.y = 10
+        box7.castShadow = true
+        box7.receiveShadow = true
+        this.mesh.add(box7)
+
+        this.box4 = box4
+    }
+
+    update() {
+        this.box4.rotation.x += 0.3
+    }
+}
+
 
 let scene = new THREE.Scene()
 let camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 10000)
@@ -63,72 +187,50 @@ scene.fog = new THREE.Fog(0xf7d9aa, 100, 950)
 
 
 function createLights() {
-    // 半球光就是渐变的光；
-    // 第一个参数是天空的颜色，第二个参数是地上的颜色，第三个参数是光源的强度
-    let hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.9);
+    let hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.9)
 
-    // 方向光是从一个特定的方向的照射
-    // 类似太阳，即所有光源是平行的
-    // 第一个参数是关系颜色，第二个参数是光源强度
-    let shadowLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    let shadowLight = new THREE.DirectionalLight(0xffffff, 0.9)
+    shadowLight.position.set(150, 350, 350)
+    shadowLight.castShadow = true
+    shadowLight.shadow.camera.left = -400
+    shadowLight.shadow.camera.right = 400
+    shadowLight.shadow.camera.top = 400
+    shadowLight.shadow.camera.bottom = -400
+    shadowLight.shadow.camera.near = 1
+    shadowLight.shadow.camera.far = 1000
+    shadowLight.shadow.mapSize.width = 2000
+    shadowLight.shadow.mapSize.height = 2000
 
-    // 设置光源的方向。  
-    // 位置不同，方向光作用于物体的面也不同，看到的颜色也不同
-    shadowLight.position.set(150, 350, 350);
-
-    // 开启光源投影
-    shadowLight.castShadow = true;
-
-    // 定义可见域的投射阴影
-    shadowLight.shadow.camera.left = -400;
-    shadowLight.shadow.camera.right = 400;
-    shadowLight.shadow.camera.top = 400;
-    shadowLight.shadow.camera.bottom = -400;
-    shadowLight.shadow.camera.near = 1;
-    shadowLight.shadow.camera.far = 1000;
-
-    // 定义阴影的分辨率；虽然分辨率越高越好，但是需要付出更加昂贵的代价维持高性能的表现。
-    shadowLight.shadow.mapSize.width = 2048;
-    shadowLight.shadow.mapSize.height = 2048;
-
-    // 为了使这些光源呈现效果，只需要将它们添加到场景中
-    scene.add(hemisphereLight);
-    scene.add(shadowLight);
+    scene.add(hemisphereLight)
+    scene.add(shadowLight)
 }
 
 function createSky() {
-    let sky = new THREE.Object3D()
-    let angle = Math.PI * 2 / 20
-    for (let i = 0; i < 20; i++) {
-        let a = angle * i
-        let cloud = new Cloud()
-        let h = 750 + Math.random() * 200
-        let x = Math.cos(a) * h
-        let y = Math.sin(a) * h
-        let z = -400 - Math.random() * 400;
-        let scale = 1 + Math.random() * 2;
-        cloud.mesh.scale.set(scale, scale, scale)
-        cloud.mesh.position.set(x, y, z)
-        cloud.mesh.rotation.z = a + Math.PI / 2
-        sky.add(cloud.mesh)
-    }
-    sky.position.y = -600
-    scene.add(sky)
-
+    let sky = new Sky()
+    sky.mesh.position.y = -600
+    scene.add(sky.mesh)
     return sky
 }
 
 function createSea() {
     let sea = new Sea()
     scene.add(sea.mesh)
+    return sea
+}
 
-    return sea.mesh
+function createPlane() {
+    let plane = new Plane()
+    plane.mesh.scale.set(0.5, 0.5, 0.5)
+
+    plane.mesh.position.y = 100
+    scene.add(plane.mesh)
+    return plane
 }
 
 createLights()
 let sky = createSky()
 let sea = createSea()
-
+let plane = createPlane()
 
 document.body.append(renderer.domElement)
 
@@ -137,10 +239,35 @@ s.showPanel(0)
 document.body.append(s.dom)
 function draw() {
     s.begin()
-    sky.rotation.z += 0.01
-    sea.rotation.z += 0.01
+    sky.update()
+    sea.update()
+    plane.update()
     renderer.render(scene, camera)
     s.end()
     requestAnimationFrame(draw)
 }
 draw()
+
+
+function calcValue(percent, min, max) {
+    percent = Math.min(percent, 0.75)
+    percent = Math.max(percent, -0.75)
+    let span = max - min
+    percent = (percent - (-0.75)) / (0.75 - (-0.75))
+    return percent * span + min
+}
+
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(window.innerWidth, window.innerHeight)
+})
+
+renderer.domElement.addEventListener("mousemove", (e) => {
+    let mx = (e.clientX / window.innerWidth) * 2 - 1
+    let my = 1 - (e.clientY / window.innerHeight) * 2
+    let x = calcValue(mx, -100, 100)
+    let y = calcValue(my, 25, 175)
+    plane.mesh.position.x = x
+    plane.mesh.position.y = y
+})
