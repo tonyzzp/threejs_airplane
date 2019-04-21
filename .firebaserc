@@ -1,1 +1,5 @@
-{}
+{
+  "projects": {
+    "threejs-demo": "threejs-demo"
+  }
+}
