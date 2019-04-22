@@ -168,6 +168,13 @@ class Plane {
     }
 
     update() {
+        // this.mesh.position.x = plane.mesh.position.x + (mousePos.x - plane.mesh.position.x) * 0.1
+        this.mesh.position.y = plane.mesh.position.y + (mousePos.y - plane.mesh.position.y) * 0.1
+
+        let remainY = mousePos.y - this.mesh.position.y
+        this.mesh.rotation.z = remainY * 0.02
+        this.mesh.rotation.x = -remainY * 0.01
+
         this.box4.rotation.x += 0.3
     }
 }
@@ -187,7 +194,11 @@ scene.fog = new THREE.Fog(0xf7d9aa, 100, 950)
 
 
 function createLights() {
+    let ambientLight = new THREE.AmbientLight(0xdc8874, 0.5)
+    scene.add(ambientLight)
+
     let hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.9)
+    scene.add(hemisphereLight)
 
     let shadowLight = new THREE.DirectionalLight(0xffffff, 0.9)
     shadowLight.position.set(150, 350, 350)
@@ -201,7 +212,6 @@ function createLights() {
     shadowLight.shadow.mapSize.width = 2000
     shadowLight.shadow.mapSize.height = 2000
 
-    scene.add(hemisphereLight)
     scene.add(shadowLight)
 }
 
@@ -226,6 +236,8 @@ function createPlane() {
     scene.add(plane.mesh)
     return plane
 }
+
+let mousePos = { x: 0, y: 0 }
 
 createLights()
 let sky = createSky()
@@ -268,6 +280,6 @@ renderer.domElement.addEventListener("mousemove", (e) => {
     let my = 1 - (e.clientY / window.innerHeight) * 2
     let x = calcValue(mx, -100, 100)
     let y = calcValue(my, 25, 175)
-    plane.mesh.position.x = x
-    plane.mesh.position.y = y
+    mousePos.x = x
+    mousePos.y = y
 })
