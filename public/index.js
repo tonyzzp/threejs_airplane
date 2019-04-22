@@ -231,13 +231,12 @@ function createSea() {
 function createPlane() {
     let plane = new Plane()
     plane.mesh.scale.set(0.5, 0.5, 0.5)
-
     plane.mesh.position.y = 100
     scene.add(plane.mesh)
     return plane
 }
 
-let mousePos = { x: 0, y: 0 }
+let mousePos = { x: 0, y: 100 }
 
 createLights()
 let sky = createSky()
