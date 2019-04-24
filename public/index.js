@@ -168,10 +168,9 @@ class Plane {
     }
 
     update() {
-        // this.mesh.position.x = plane.mesh.position.x + (mousePos.x - plane.mesh.position.x) * 0.1
-        this.mesh.position.y = plane.mesh.position.y + (mousePos.y - plane.mesh.position.y) * 0.1
-
-        let remainY = mousePos.y - this.mesh.position.y
+        let y = calcValue(mousePos.y, -0.75, 0.75, 25, 175)
+        this.mesh.position.y = plane.mesh.position.y + (y - plane.mesh.position.y) * 0.1
+        let remainY = y - this.mesh.position.y
         this.mesh.rotation.z = remainY * 0.02
         this.mesh.rotation.x = -remainY * 0.01
 
@@ -249,22 +248,24 @@ let s = new Stats()
 s.showPanel(0)
 document.body.append(s.dom)
 function draw() {
-    s.begin()
+    s.update()
+    camera.fov = calcValue(mousePos.x, -1, 1, 40, 80)
+    console.log(camera.fov)
+    camera.updateProjectionMatrix()
     sky.update()
     sea.update()
     plane.update()
     renderer.render(scene, camera)
-    s.end()
     requestAnimationFrame(draw)
 }
 draw()
 
 
-function calcValue(percent, min, max) {
-    percent = Math.min(percent, 0.75)
-    percent = Math.max(percent, -0.75)
+function calcValue(percent, pmin, pmax, min, max) {
+    percent = Math.min(percent, pmax)
+    percent = Math.max(percent, pmin)
     let span = max - min
-    percent = (percent - (-0.75)) / (0.75 - (-0.75))
+    percent = (percent - pmin) / (pmax - pmin)
     return percent * span + min
 }
 
@@ -277,8 +278,7 @@ window.addEventListener("resize", () => {
 renderer.domElement.addEventListener("mousemove", (e) => {
     let mx = (e.clientX / window.innerWidth) * 2 - 1
     let my = 1 - (e.clientY / window.innerHeight) * 2
-    let x = calcValue(mx, -100, 100)
-    let y = calcValue(my, 25, 175)
-    mousePos.x = x
-    mousePos.y = y
+    mousePos.x = mx
+    mousePos.y = my
 })
+
