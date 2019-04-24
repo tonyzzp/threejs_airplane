@@ -9,7 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "firebase": "^5.10.0",
     "stats.js": "^0.17.0",
     "three": "^0.103.0",
     "three-fbx-loader": "^1.0.3",

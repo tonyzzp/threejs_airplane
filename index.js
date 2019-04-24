@@ -54,25 +54,23 @@ class Sea {
 
 class Cloud {
     constructor() {
-        this.mesh = new THREE.Object3D()
+        let geo = new THREE.Geometry()
         let n = 3 + Math.random() * 2
         for (let i = 0; i < n; i++) {
-            let mat = new THREE.MeshPhongMaterial({
-                color: Colors.white,
-            })
-            let geo = new THREE.BoxGeometry(20, 20, 20)
-            let mesh = new THREE.Mesh(geo, mat)
-            mesh.castShadow = true
-            mesh.receiveShadow = true
-            mesh.position.x = i * 15
-            mesh.position.y = Math.random() * 10
-            mesh.position.z = Math.random() * 10
-            mesh.rotation.z = Math.random() * Math.PI / 2
-            mesh.rotation.x = Math.random() * Math.PI / 2
+            let g = new THREE.BoxGeometry(20, 20, 20)
             let scale = Math.random() * 0.9 + 0.1
-            mesh.scale.set(scale, scale, scale)
-            this.mesh.add(mesh)
+            g.rotateX(Math.random() * Math.PI / 2)
+            g.rotateZ(Math.random() * Math.PI / 2)
+            g.translate(i * 15, Math.random() * 10, Math.random() * 10)
+            g.scale(scale, scale, scale)
+            geo.merge(g)
         }
+        let mat = new THREE.MeshPhongMaterial({
+            color: Colors.white,
+        })
+        this.mesh = new THREE.Mesh(geo, mat)
+        this.mesh.receiveShadow = true
+        this.mesh.castShadow = true
     }
 }
 
