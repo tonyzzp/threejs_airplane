@@ -1,4 +1,4 @@
-const Colors = {
+﻿const Colors = {
     red: 0xf25346,
     white: 0xd8d0d1,
     brown: 0x59332e,
@@ -248,7 +248,6 @@ document.body.append(s.dom)
 function draw() {
     s.update()
     camera.fov = calcValue(mousePos.x, -1, 1, 40, 80)
-    console.log(camera.fov)
     camera.updateProjectionMatrix()
     sky.update()
     sea.update()
